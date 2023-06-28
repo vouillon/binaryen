@@ -195,6 +195,18 @@ struct MetaDCEGraph {
 
       void visitGlobalGet(GlobalGet* curr) { handleGlobal(curr->name); }
       void visitGlobalSet(GlobalSet* curr) { handleGlobal(curr->name); }
+      void visitRefFunc(RefFunc* curr) {
+        if (parentDceName.isNull()) return;
+        if (!getModule()->getFunction(curr->func)->imported()) {
+          parent->nodes[parentDceName]
+            .reaches.push_back(parent->functionToDCENode[curr->func]);
+        } else {
+          parent->nodes[parentDceName]
+            .reaches.push_back(
+              parent
+                ->importIdToDCENode[parent->getFunctionImportId(curr->func)]);
+        }
+      }
 
     private:
       MetaDCEGraph* parent;
@@ -248,18 +260,8 @@ struct MetaDCEGraph {
         return std::make_unique<Scanner>(parent);
       }
 
-      void visitCall(Call* curr) {
-        if (!getModule()->getFunction(curr->target)->imported()) {
-          parent->nodes[parent->functionToDCENode[getFunction()->name]]
-            .reaches.push_back(parent->functionToDCENode[curr->target]);
-        } else {
-          assert(parent->functionToDCENode.count(getFunction()->name) > 0);
-          parent->nodes[parent->functionToDCENode[getFunction()->name]]
-            .reaches.push_back(
-              parent
-                ->importIdToDCENode[parent->getFunctionImportId(curr->target)]);
-        }
-      }
+      void visitCall(Call* curr) { handleFunction(curr->target); }
+      void visitRefFunc(RefFunc* curr) { handleFunction(curr->func); }
       void visitGlobalGet(GlobalGet* curr) { handleGlobal(curr->name); }
       void visitGlobalSet(GlobalSet* curr) { handleGlobal(curr->name); }
       void visitThrow(Throw* curr) { handleTag(curr->tag); }
@@ -271,6 +273,19 @@ struct MetaDCEGraph {
 
     private:
       MetaDCEGraph* parent;
+
+      void handleFunction(Name name) {
+        if (!getModule()->getFunction(name)->imported()) {
+          parent->nodes[parent->functionToDCENode[getFunction()->name]]
+            .reaches.push_back(parent->functionToDCENode[name]);
+        } else {
+          assert(parent->functionToDCENode.count(getFunction()->name) > 0);
+          parent->nodes[parent->functionToDCENode[getFunction()->name]]
+            .reaches.push_back(
+              parent
+                ->importIdToDCENode[parent->getFunctionImportId(name)]);
+        }
+      }
 
       void handleGlobal(Name name) {
         if (!getFunction()) {
