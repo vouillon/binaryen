@@ -1785,6 +1785,27 @@ struct OptimizeInstructions
   void visitStructGet(StructGet* curr) {
     skipNonNullCast(curr->ref, curr);
     trapOnNull(curr, curr->ref);
+
+    if (curr->type == Type::unreachable) {
+      return;
+    }
+
+    if (auto* structNew = curr->ref->dynCast<StructNew>()) {
+      if (structNew->isWithDefault()) {
+        return;
+      }
+
+      Builder builder(*getModule());
+
+      // Store the value of the field we want in a tee, and return that after a
+      // drop of the struct (which might have side effects).
+      auto valueType = structNew->type.getHeapType().getStruct().fields[curr->index].type;
+      Index tempLocal = builder.addVar(getFunction(), valueType);
+      structNew->operands[curr->index] =
+        builder.makeLocalTee(tempLocal, structNew->operands[curr->index], valueType);
+      auto* get = builder.makeLocalGet(tempLocal, valueType);
+      replaceCurrent(getDroppedChildrenAndAppend(structNew, get));
+    }
   }
 
   void visitStructSet(StructSet* curr) {
