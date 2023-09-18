@@ -768,12 +768,13 @@
   )
 
   ;; CHECK:      (func $struct-get-new (type $4) (param $x i32) (param $y i32) (result i32)
-  ;; CHECK-NEXT:  (struct.get $struct2 0
-  ;; CHECK-NEXT:   (struct.new $struct2
+  ;; CHECK-NEXT:  (local $2 i32)
+  ;; CHECK-NEXT:  (drop
+  ;; CHECK-NEXT:   (local.tee $2
   ;; CHECK-NEXT:    (local.get $x)
-  ;; CHECK-NEXT:    (local.get $y)
   ;; CHECK-NEXT:   )
   ;; CHECK-NEXT:  )
+  ;; CHECK-NEXT:  (local.get $2)
   ;; CHECK-NEXT: )
   (func $struct-get-new (param $x i32) (param $y i32) (result i32)
     ;; An extraction from a make can be simplified to just get the right lane.
@@ -786,12 +787,13 @@
   )
 
   ;; CHECK:      (func $struct-get-new-2 (type $4) (param $x i32) (param $y i32) (result i32)
-  ;; CHECK-NEXT:  (struct.get $struct2 1
-  ;; CHECK-NEXT:   (struct.new $struct2
-  ;; CHECK-NEXT:    (local.get $x)
+  ;; CHECK-NEXT:  (local $2 i32)
+  ;; CHECK-NEXT:  (drop
+  ;; CHECK-NEXT:   (local.tee $2
   ;; CHECK-NEXT:    (local.get $y)
   ;; CHECK-NEXT:   )
   ;; CHECK-NEXT:  )
+  ;; CHECK-NEXT:  (local.get $2)
   ;; CHECK-NEXT: )
   (func $struct-get-new-2 (param $x i32) (param $y i32) (result i32)
     ;; As above, but the second lane.
