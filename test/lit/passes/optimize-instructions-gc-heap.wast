@@ -760,10 +760,71 @@
     )
   )
 
-  ;; CHECK:      (func $helper-i32 (type $4) (param $x i32) (result i32)
+  ;; CHECK:      (func $helper-i32 (type $5) (param $x i32) (result i32)
   ;; CHECK-NEXT:  (i32.const 42)
   ;; CHECK-NEXT: )
   (func $helper-i32 (param $x i32) (result i32)
     (i32.const 42)
+  )
+
+  ;; CHECK:      (func $struct-get-new (type $4) (param $x i32) (param $y i32) (result i32)
+  ;; CHECK-NEXT:  (struct.get $struct2 0
+  ;; CHECK-NEXT:   (struct.new $struct2
+  ;; CHECK-NEXT:    (local.get $x)
+  ;; CHECK-NEXT:    (local.get $y)
+  ;; CHECK-NEXT:   )
+  ;; CHECK-NEXT:  )
+  ;; CHECK-NEXT: )
+  (func $struct-get-new (param $x i32) (param $y i32) (result i32)
+    ;; An extraction from a make can be simplified to just get the right lane.
+    (struct.get $struct2 0
+      (struct.new $struct2
+        (local.get $x)
+        (local.get $y)
+      )
+    )
+  )
+
+  ;; CHECK:      (func $struct-get-new-2 (type $4) (param $x i32) (param $y i32) (result i32)
+  ;; CHECK-NEXT:  (struct.get $struct2 1
+  ;; CHECK-NEXT:   (struct.new $struct2
+  ;; CHECK-NEXT:    (local.get $x)
+  ;; CHECK-NEXT:    (local.get $y)
+  ;; CHECK-NEXT:   )
+  ;; CHECK-NEXT:  )
+  ;; CHECK-NEXT: )
+  (func $struct-get-new-2 (param $x i32) (param $y i32) (result i32)
+    ;; As above, but the second lane.
+    (struct.get $struct2 1
+      (struct.new $struct2
+        (local.get $x)
+        (local.get $y)
+      )
+    )
+  )
+
+  ;; CHECK:      (func $struct-get-new-unreachable (type $4) (param $x i32) (param $y i32) (result i32)
+  ;; CHECK-NEXT:  (block ;; (replaces something unreachable we can't emit)
+  ;; CHECK-NEXT:   (drop
+  ;; CHECK-NEXT:    (block ;; (replaces something unreachable we can't emit)
+  ;; CHECK-NEXT:     (drop
+  ;; CHECK-NEXT:      (unreachable)
+  ;; CHECK-NEXT:     )
+  ;; CHECK-NEXT:     (drop
+  ;; CHECK-NEXT:      (local.get $y)
+  ;; CHECK-NEXT:     )
+  ;; CHECK-NEXT:     (unreachable)
+  ;; CHECK-NEXT:    )
+  ;; CHECK-NEXT:   )
+  ;; CHECK-NEXT:   (unreachable)
+  ;; CHECK-NEXT:  )
+  ;; CHECK-NEXT: )
+  (func $struct-get-new-unreachable (param $x i32) (param $y i32) (result i32)
+    (struct.get $struct2 0
+      (struct.new $struct2
+        (unreachable) ;; because of this we should do nothing
+        (local.get $y)
+      )
+    )
   )
 )
