@@ -307,6 +307,43 @@ bool canHandleAsLocal(Type type) {
   return type.isConcrete();
 }
 
+void initializeWithDefaultValue(Function* func, Module& wasm, std::unordered_set<Index>& badIndexes) {
+  // Initialize with the default value (ref.i31 (i32.const 0)) when
+  // possible
+  Builder builder(wasm);
+  auto* block = builder.makeBlock();
+  bool updated = false;
+  std::unordered_set<Index> remainingIndexes;
+  for (auto index : badIndexes) {
+    auto type = func->getLocalType(index);
+    if (type.isRef()) {
+      auto heapType = type.getHeapType();
+      if (heapType.isBasic()) {
+        switch (heapType.getBasic()) {
+          case HeapType::any:
+          case HeapType::eq:
+          case HeapType::i31:
+            block->list.push_back(builder.makeLocalSet(
+              index, builder.makeRefI31(builder.makeConst(int32_t(0)))));
+            updated = true;
+            break;
+          default:
+            remainingIndexes.insert(index);
+            break;
+        }
+      }
+    }
+  }
+  if (updated) {
+    // We have inserted some sets. Update the function body and the set of bad
+    // indices
+    block->list.push_back(func->body);
+    block->finalize(func->body->type);
+    func->body = block;
+    badIndexes = remainingIndexes;
+  }
+}
+
 void handleNonDefaultableLocals(Function* func, Module& wasm) {
   if (!wasm.features.hasReferenceTypes()) {
     // No references, so no non-nullable ones at all.
@@ -342,6 +379,9 @@ void handleNonDefaultableLocals(Function* func, Module& wasm) {
            func->getLocalType(index).isTuple());
     assert(!func->isParam(index));
   }
+
+  initializeWithDefaultValue(func, wasm, badIndexes);
+
   if (badIndexes.empty()) {
     return;
   }
