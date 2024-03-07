@@ -2612,6 +2612,11 @@ Expression* SExpressionWasmBuilder::makeBreak(Element& s, bool isConditional) {
   } else {
     ret->value = parseExpression(s[i]);
   }
+#if 0
+  if (isConditional && ret->value) {
+    ret->type = 
+  }
+#endif
   ret->finalize();
   return ret;
 }
