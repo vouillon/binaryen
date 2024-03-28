@@ -400,8 +400,14 @@ private:
         self->pushTask(doStartTry, currp);
         return;
       }
+      if (curr->is<TryTable>()) {
+        self->pushTask(doEndTryTable, currp);
+      }
       PostWalker<InternalAnalyzer, OverriddenVisitor<InternalAnalyzer>>::scan(
         self, currp);
+      if (curr->is<TryTable>()) {
+        self->pushTask(doStartTryTable, currp);
+      }
     }
 
     static void doStartTry(InternalAnalyzer* self, Expression** currp) {
@@ -441,6 +447,27 @@ private:
       self->parent.catchDepth--;
     }
 
+    static void doStartTryTable(InternalAnalyzer* self, Expression** currp) {
+      TryTable* curr = (*currp)->cast<TryTable>();
+      // We only count 'try_table's with a 'catch_all' because
+      // instructions within a 'try_table' without a 'catch_all' can still
+      // throw outside of the try.
+      if (curr->hasCatchAll()) {
+        self->parent.tryDepth++;
+      }
+    }
+
+    static void doEndTryTable(InternalAnalyzer* self, Expression** currp) {
+      TryTable* curr = (*currp)->cast<TryTable>();
+      // We only count 'try_table's with a 'catch_all' because
+      // instructions within a 'try_table' without a 'catch_all' can still
+      // throw outside of the try.
+      if (curr->hasCatchAll()) {
+        assert(self->parent.tryDepth > 0 && "try depth cannot be negative");
+        self->parent.tryDepth--;
+      }
+    }
+
     void visitBlock(Block* curr) {
       if (curr->name.is()) {
         parent.breakTargets.erase(curr->name); // these were internal breaks
@@ -478,7 +505,7 @@ private:
           // the target function throws and we know that will be caught anyhow,
           // the same as the code below for the general path.
           const auto& targetEffects = iter->second;
-          if (targetEffects.throws_ && parent.tryDepth > 0) {
+          if (targetEffects.throws_ && parent.tryDepth > 0 && !curr->isReturn) {
             auto filteredEffects = targetEffects;
             filteredEffects.throws_ = false;
             parent.mergeIn(filteredEffects);
@@ -492,13 +519,13 @@ private:
 
       parent.calls = true;
       // When EH is enabled, any call can throw.
-      if (parent.features.hasExceptionHandling() && parent.tryDepth == 0) {
+      if (parent.features.hasExceptionHandling() && (parent.tryDepth == 0 || curr->isReturn)) {
         parent.throws_ = true;
       }
     }
     void visitCallIndirect(CallIndirect* curr) {
       parent.calls = true;
-      if (parent.features.hasExceptionHandling() && parent.tryDepth == 0) {
+      if (parent.features.hasExceptionHandling() && (parent.tryDepth == 0 || curr->isReturn)) {
         parent.throws_ = true;
       }
       if (curr->isReturn) {
