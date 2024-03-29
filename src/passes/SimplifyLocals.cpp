@@ -323,7 +323,7 @@ struct SimplifyLocals
 
     // Certain expressions cannot be sinked into 'try', and so at the start of
     // 'try' we forget about them.
-    if (curr->is<Try>()) {
+    if (curr->is<Try>() || curr->is<TryTable>()) {
       std::vector<Index> invalidated;
       for (auto& [index, info] : self->sinkables) {
         // Expressions that may throw cannot be moved into a try (which might

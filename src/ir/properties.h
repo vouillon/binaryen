@@ -323,6 +323,10 @@ inline Expression** getImmediateFallthroughPtr(
     if (!EffectAnalyzer(passOptions, module, tryy->body).throws()) {
       return &tryy->body;
     }
+  } else if (auto* tryy = curr->dynCast<TryTable>()) {
+    if (!EffectAnalyzer(passOptions, module, tryy->body).throws()) {
+      return &tryy->body;
+    }
   } else if (auto* as = curr->dynCast<RefCast>()) {
     return &as->ref;
   } else if (auto* as = curr->dynCast<RefAs>()) {
