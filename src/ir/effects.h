@@ -519,13 +519,15 @@ private:
 
       parent.calls = true;
       // When EH is enabled, any call can throw.
-      if (parent.features.hasExceptionHandling() && (parent.tryDepth == 0 || curr->isReturn)) {
+      if (parent.features.hasExceptionHandling() &&
+          (parent.tryDepth == 0 || curr->isReturn)) {
         parent.throws_ = true;
       }
     }
     void visitCallIndirect(CallIndirect* curr) {
       parent.calls = true;
-      if (parent.features.hasExceptionHandling() && (parent.tryDepth == 0 || curr->isReturn)) {
+      if (parent.features.hasExceptionHandling() &&
+          (parent.tryDepth == 0 || curr->isReturn)) {
         parent.throws_ = true;
       }
       if (curr->isReturn) {
@@ -777,7 +779,8 @@ private:
         return;
       }
       parent.calls = true;
-      if (parent.features.hasExceptionHandling() && parent.tryDepth == 0) {
+      if (parent.features.hasExceptionHandling() &&
+          (parent.tryDepth == 0 || curr->isReturn)) {
         parent.throws_ = true;
       }
       if (curr->isReturn) {
