@@ -63,5 +63,6 @@ jobs:
         run: |
           (& opam env) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
           ocamlc -config
+          ls d:/opamroot/default/bin/
           opam update
           opam install --color=always --confirm-level=unsafe-yes .
