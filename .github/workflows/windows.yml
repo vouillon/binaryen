@@ -59,7 +59,7 @@ jobs:
 
       - name: Install package
         env:
-          OPAMERRLOGLEN=0
+          OPAMERRLOGLEN: 0
         run: |
           opam update
           opam install --color=always --confirm-level=unsafe-yes .
