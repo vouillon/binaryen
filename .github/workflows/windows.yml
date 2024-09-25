@@ -61,6 +61,8 @@ jobs:
         env:
           OPAMERRLOGLEN: 0
         run: |
+          opam switch list
+          opam switch 5.2.0
           eval $(opam env)
           ocamlc -config
           opam update
