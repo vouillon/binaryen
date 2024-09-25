@@ -15,7 +15,7 @@ depends: ["conf-cmake" "conf-ninja" {os-family != "windows"}]
 build: [
   ["cmake" "-G" "Ninja" "." "-DBUILD_STATIC_LIB=ON" "-DBUILD_TESTS=off" "-DINSTALL_LIBS=off" "-DENABLE_WERROR=off"] {os-family != "windows"}
   ["ninja"] {os-family != "windows"}
-  ["cmake" "." "-DBUILD_STATIC_LIB=ON" "-DBUILD_TESTS=off" "-DINSTALL_LIBS=off" "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc"] {os-family = "windows"}
+  ["cmake" "." "-DBUILD_STATIC_LIB=ON" "-DBUILD_TESTS=off" "-DINSTALL_LIBS=off" "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc" "-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++"] {os-family = "windows"}
   [make "-j" jobs] {os-family = "windows"}
 ]
 install: [
