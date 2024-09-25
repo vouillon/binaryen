@@ -61,5 +61,6 @@ jobs:
         env:
           OPAMERRLOGLEN: 0
         run: |
+          ocamlc -config
           opam update
           opam install --color=always --confirm-level=unsafe-yes .
