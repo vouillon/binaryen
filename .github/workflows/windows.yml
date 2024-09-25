@@ -61,9 +61,7 @@ jobs:
         env:
           OPAMERRLOGLEN: 0
         run: |
-          opam switch list
-          opam switch 5.2.0
-          eval $(opam env)
+          (& opam env) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
           ocamlc -config
           opam update
           opam install --color=always --confirm-level=unsafe-yes .
