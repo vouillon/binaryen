@@ -41,7 +41,7 @@ jobs:
 
       - name: Init opam
         if: steps.cache-opam.outputs.cache-hit != 'true'
-        run: opam init --yes --no-setup .
+        run: opam init --yes --no-setup
 
       - name: Restrict testing to available compilers
         if: steps.cache-opam.outputs.cache-hit != 'true'
