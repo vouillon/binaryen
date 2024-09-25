@@ -60,4 +60,4 @@ jobs:
       - name: Install package
         run: |
           opam update
-          opam install --color=always --confirm-level=unsafe-yes .
+          OPAMERRLOGLEN=0 opam install --color=always --confirm-level=unsafe-yes .
