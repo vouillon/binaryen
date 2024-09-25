@@ -58,6 +58,8 @@ jobs:
           key: ${{ steps.cache-opam.outputs.cache-primary-key }}
 
       - name: Install package
+        env:
+          OPAMERRLOGLEN=0
         run: |
           opam update
-          OPAMERRLOGLEN=0 opam install --color=always --confirm-level=unsafe-yes .
+          opam install --color=always --confirm-level=unsafe-yes .
