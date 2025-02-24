@@ -3083,6 +3083,11 @@ void PrintSExpression::visitExport(Export* curr) {
     case ExternalKind::Tag:
       o << "tag";
       break;
+    case ExternalKind::Type:
+      o << "type ";
+      printHeapType(curr->heaptype);
+      o << "))";
+      return;
     case ExternalKind::Invalid:
       WASM_UNREACHABLE("invalid ExternalKind");
   }

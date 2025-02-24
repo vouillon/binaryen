@@ -4893,50 +4893,42 @@ WASM_DEPRECATED BinaryenExportRef BinaryenAddExport(BinaryenModuleRef module,
 BinaryenExportRef BinaryenAddFunctionExport(BinaryenModuleRef module,
                                             const char* internalName,
                                             const char* externalName) {
-  auto* ret = new Export();
-  ret->value = internalName;
-  ret->name = externalName;
-  ret->kind = ExternalKind::Function;
+  auto* ret = new Export(externalName, internalName, ExternalKind::Function);
   ((Module*)module)->addExport(ret);
   return ret;
 }
 BinaryenExportRef BinaryenAddTableExport(BinaryenModuleRef module,
                                          const char* internalName,
                                          const char* externalName) {
-  auto* ret = new Export();
-  ret->value = internalName;
-  ret->name = externalName;
-  ret->kind = ExternalKind::Table;
+  auto* ret = new Export(externalName, internalName, ExternalKind::Table);
   ((Module*)module)->addExport(ret);
   return ret;
 }
 BinaryenExportRef BinaryenAddMemoryExport(BinaryenModuleRef module,
                                           const char* internalName,
                                           const char* externalName) {
-  auto* ret = new Export();
-  ret->value = internalName;
-  ret->name = externalName;
-  ret->kind = ExternalKind::Memory;
+  auto* ret = new Export(externalName, internalName, ExternalKind::Memory);
   ((Module*)module)->addExport(ret);
   return ret;
 }
 BinaryenExportRef BinaryenAddGlobalExport(BinaryenModuleRef module,
                                           const char* internalName,
                                           const char* externalName) {
-  auto* ret = new Export();
-  ret->value = internalName;
-  ret->name = externalName;
-  ret->kind = ExternalKind::Global;
+  auto* ret = new Export(externalName, internalName, ExternalKind::Global);
   ((Module*)module)->addExport(ret);
   return ret;
 }
 BinaryenExportRef BinaryenAddTagExport(BinaryenModuleRef module,
                                        const char* internalName,
                                        const char* externalName) {
-  auto* ret = new Export();
-  ret->value = internalName;
-  ret->name = externalName;
-  ret->kind = ExternalKind::Tag;
+  auto* ret = new Export(externalName, internalName, ExternalKind::Tag);
+  ((Module*)module)->addExport(ret);
+  return ret;
+}
+BinaryenExportRef BinaryenAddTypeExport(BinaryenModuleRef module,
+                                        BinaryenHeapType type,
+                                        const char* externalName) {
+  auto* ret = new Export(externalName, HeapType(type));
   ((Module*)module)->addExport(ret);
   return ret;
 }
@@ -5087,10 +5079,8 @@ void BinaryenSetMemory(BinaryenModuleRef module,
   memory->shared = shared;
   memory->addressType = memory64 ? Type::i64 : Type::i32;
   if (exportName) {
-    auto memoryExport = std::make_unique<Export>();
-    memoryExport->name = exportName;
-    memoryExport->value = memory->name;
-    memoryExport->kind = ExternalKind::Memory;
+    auto memoryExport =
+      std::make_unique<Export>(exportName, memory->name, ExternalKind::Memory);
     ((Module*)module)->addExport(memoryExport.release());
   }
   ((Module*)module)->removeDataSegments([&](DataSegment* curr) {

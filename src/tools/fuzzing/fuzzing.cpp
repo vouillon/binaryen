@@ -26,9 +26,7 @@
 
 namespace wasm {
 
-namespace {
-
-} // anonymous namespace
+namespace {} // anonymous namespace
 
 TranslateToFuzzReader::TranslateToFuzzReader(Module& wasm,
                                              std::vector<char>&& input,
@@ -520,6 +518,10 @@ void TranslateToFuzzReader::setupHeapTypes() {
         break;
       case HeapTypeKind::Cont:
         WASM_UNREACHABLE("TODO: cont");
+      case HeapTypeKind::Import:
+        interestingHeapSubTypes[type.getImport().bound].push_back(type);
+        // TODO: also the supertypes of the bound?
+        break;
       case HeapTypeKind::Basic:
         WASM_UNREACHABLE("unexpected kind");
     }
@@ -1370,10 +1372,7 @@ Function* TranslateToFuzzReader::addFunction() {
     });
   if (validExportParams && (numAddedFunctions == 0 || oneIn(2)) &&
       !wasm.getExportOrNull(func->name) && !preserveImportsAndExports) {
-    auto* export_ = new Export;
-    export_->name = func->name;
-    export_->value = func->name;
-    export_->kind = ExternalKind::Function;
+    auto* export_ = new Export(func->name, func->name, ExternalKind::Function);
     wasm.addExport(export_);
   }
   // add some to an elem segment
@@ -3558,6 +3557,7 @@ Expression* TranslateToFuzzReader::makeCompoundRef(Type type) {
     }
     case HeapTypeKind::Cont:
       WASM_UNREACHABLE("TODO: cont");
+    case HeapTypeKind::Import:
     case HeapTypeKind::Basic:
       break;
   }

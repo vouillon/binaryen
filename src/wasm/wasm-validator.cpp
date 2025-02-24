@@ -3979,6 +3979,8 @@ static void validateExports(Module& module, ValidationInfo& info) {
     } else if (exp->kind == ExternalKind::Tag) {
       info.shouldBeTrue(
         module.getTagOrNull(name), name, "module tag exports must be found");
+    } else if (exp->kind == ExternalKind::Type) {
+      // Nothing to validate
     } else {
       WASM_UNREACHABLE("invalid ExternalKind");
     }

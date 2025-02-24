@@ -152,6 +152,9 @@ GlobalTypeRewriter::TypeMap GlobalTypeRewriter::rebuildTypes(
       }
       case HeapTypeKind::Cont:
         WASM_UNREACHABLE("TODO: cont");
+      case HeapTypeKind::Import: {
+        break;
+      }
       case HeapTypeKind::Basic:
         WASM_UNREACHABLE("unexpected kind");
     }

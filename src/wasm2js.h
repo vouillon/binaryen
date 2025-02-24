@@ -534,10 +534,8 @@ Ref Wasm2JSBuilder::processWasm(Module* wasm, Name funcName) {
                         {},
                         builder.makeReturn(builder.makeGlobalGet(
                           INT64_TO_32_HIGH_BITS, Type::i32))))));
-    auto e = new Export();
-    e->name = WASM_FETCH_HIGH_BITS;
-    e->value = WASM_FETCH_HIGH_BITS;
-    e->kind = ExternalKind::Function;
+    auto e = new Export(
+      WASM_FETCH_HIGH_BITS, WASM_FETCH_HIGH_BITS, ExternalKind::Function);
     wasm->addExport(e);
   }
   if (flags.emscripten) {
@@ -842,6 +840,7 @@ void Wasm2JSBuilder::addExports(Ref ast, Module* wasm) {
         break;
       }
       case ExternalKind::Tag:
+      case ExternalKind::Type:
       case ExternalKind::Invalid:
         Fatal() << "unsupported export type: " << export_->name << "\n";
     }

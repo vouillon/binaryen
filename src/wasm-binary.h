@@ -1449,6 +1449,7 @@ class WasmBinaryReader {
   size_t codeSectionLocation;
   std::unordered_set<uint8_t> seenSections;
 
+  TypeBuilder typebuilder;
   IRBuilder builder;
   SourceMapReader sourceMapReader;
 
@@ -1516,6 +1517,7 @@ public:
   Name getMemoryName(Index index);
   Name getGlobalName(Index index);
   Name getTagName(Index index);
+  Name getTypeName(Index index);
   Name getDataName(Index index);
   Name getElemName(Index index);
 

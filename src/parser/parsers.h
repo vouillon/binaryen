@@ -431,15 +431,10 @@ Result<typename Ctx::HeapTypeT> absheaptype(Ctx& ctx, Shareability share) {
   return ctx.in.err("expected abstract heap type");
 }
 
-// heaptype ::= x:typeidx                      => types[x]
-//            | t:absheaptype                  => unshared t
-//            | '(' 'shared' t:absheaptype ')' => shared t
-template<typename Ctx> Result<typename Ctx::HeapTypeT> heaptype(Ctx& ctx) {
-  if (auto t = maybeTypeidx(ctx)) {
-    CHECK_ERR(t);
-    return *t;
-  }
-
+// shareabsheaptype ::= t:absheaptype                  => unshared t
+//                    | '(' 'shared' t:absheaptype ')' => shared t
+template<typename Ctx>
+Result<typename Ctx::HeapTypeT> sharedabsheaptype(Ctx& ctx) {
   auto share = ctx.in.takeSExprStart("shared"sv) ? Shared : Unshared;
   auto t = absheaptype(ctx, share);
   CHECK_ERR(t);
@@ -447,6 +442,17 @@ template<typename Ctx> Result<typename Ctx::HeapTypeT> heaptype(Ctx& ctx) {
     return ctx.in.err("expected end of shared abstract heap type");
   }
   return *t;
+}
+
+// heaptype ::= x:typeidx                      => types[x]
+//            | t:sharedabsheaptype            => t
+template<typename Ctx> Result<typename Ctx::HeapTypeT> heaptype(Ctx& ctx) {
+  if (auto t = maybeTypeidx(ctx)) {
+    CHECK_ERR(t);
+    return *t;
+  }
+
+  return sharedabsheaptype(ctx);
 }
 
 // reftype ::= 'funcref'   => funcref
@@ -865,6 +871,22 @@ template<typename Ctx> Result<typename Ctx::GlobalTypeT> globaltype(Ctx& ctx) {
   }
 
   return ctx.makeGlobalType(mutability, *type);
+}
+
+// typetype ::= '(' 'sub' t:absheaptype ')' => heaptype t
+template<typename Ctx> Result<typename Ctx::HeapTypeT> typetype(Ctx& ctx) {
+  if (!ctx.in.takeSExprStart("sub"sv)) {
+    return ctx.in.err("expected typetype");
+  }
+
+  auto type = sharedabsheaptype(ctx);
+  CHECK_ERR(type);
+
+  if (!ctx.in.takeRParen()) {
+    return ctx.in.err("expected end of typetype");
+  }
+
+  return type;
 }
 
 // arity ::= x:u32    (if x >=2 )
@@ -3091,6 +3113,12 @@ template<typename Ctx> MaybeResult<> import_(Ctx& ctx) {
     auto type = typeuse(ctx);
     CHECK_ERR(type);
     CHECK_ERR(ctx.addTag(name ? *name : Name{}, {}, &names, *type, pos));
+  } else if (ctx.in.takeSExprStart("type"sv)) {
+    auto name = ctx.in.takeID();
+    auto pos = ctx.in.getPos();
+    auto type = typetype(ctx);
+    CHECK_ERR(type);
+    CHECK_ERR(ctx.addTypeImport(name ? *name : Name{}, {}, &names, pos));
   } else {
     return ctx.in.err("expected import description");
   }
@@ -3345,6 +3373,7 @@ template<typename Ctx> MaybeResult<> global(Ctx& ctx) {
 //              | '(' 'memory' x:memidx ')'
 //              | '(' 'global' x:globalidx ')'
 //              | '(' 'tag' x:tagidx ')'
+//              | '(' 'type' x:typeidx ')'
 template<typename Ctx> MaybeResult<> export_(Ctx& ctx) {
   auto pos = ctx.in.getPos();
   if (!ctx.in.takeSExprStart("export"sv)) {
@@ -3376,6 +3405,10 @@ template<typename Ctx> MaybeResult<> export_(Ctx& ctx) {
     auto idx = tagidx(ctx);
     CHECK_ERR(idx);
     CHECK_ERR(ctx.addExport(pos, *idx, *name, ExternalKind::Tag));
+  } else if (ctx.in.takeSExprStart("type"sv)) {
+    auto idx = heaptype(ctx);
+    CHECK_ERR(idx);
+    CHECK_ERR(ctx.addTypeExport(pos, *idx, *name));
   } else {
     return ctx.in.err("expected export description");
   }

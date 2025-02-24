@@ -35,9 +35,8 @@ namespace wasm {
 
 void addExportedFunction(Module& wasm, Function* function) {
   wasm.addFunction(function);
-  auto export_ = new Export;
-  export_->name = export_->value = function->name;
-  export_->kind = ExternalKind::Function;
+  auto export_ =
+    new Export(function->name, function->name, ExternalKind::Function);
   wasm.addExport(export_);
 }
 

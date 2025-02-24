@@ -26,6 +26,13 @@ Result<> parseTypeDefs(
   std::unordered_map<HeapType, std::unordered_map<Name, Index>>& typeNames) {
   TypeBuilder builder(decls.typeDefs.size());
   ParseTypeDefsCtx ctx(input, builder, typeIndices);
+  for (auto& [name, importNames, pos] : decls.typeImports) {
+    WithPosition with(ctx, pos);
+    auto heaptype = typetype(ctx);
+    CHECK_ERR(heaptype);
+    builder[ctx.index] = Import(importNames.mod, importNames.nm, *heaptype);
+    ctx.names[ctx.index++].name = name;
+  }
   for (auto& recType : decls.recTypeDefs) {
     WithPosition with(ctx, recType.pos);
     CHECK_ERR(rectype(ctx));

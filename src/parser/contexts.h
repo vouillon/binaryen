@@ -935,6 +935,9 @@ struct ParseDeclsCtx : NullTypeParserCtx, NullInstrParserCtx {
   std::vector<DefPos> dataDefs;
   std::vector<DefPos> tagDefs;
 
+  // Type imports: name, positions of type and import names.
+  std::vector<std::tuple<Name, ImportNames, Index>> typeImports;
+
   // Positions of export definitions.
   std::vector<Index> exportDefs;
 
@@ -1092,7 +1095,21 @@ struct ParseDeclsCtx : NullTypeParserCtx, NullInstrParserCtx {
                   TypeUseT type,
                   Index pos);
 
+  Result<> addTypeImport(Name name,
+                         const std::vector<Name>& exports,
+                         ImportNames* importNames,
+                         Index pos) {
+    typeDefs.push_back({name, pos, Index(typeDefs.size()), {}});
+    typeImports.push_back({name, *importNames, pos});
+    return Ok{};
+  }
+
   Result<> addExport(Index pos, Ok, Name, ExternalKind) {
+    exportDefs.push_back(pos);
+    return Ok{};
+  }
+
+  Result<> addTypeExport(Index pos, Ok, Name) {
     exportDefs.push_back(pos);
     return Ok{};
   }
@@ -1401,6 +1418,13 @@ struct ParseModuleTypesCtx : TypeParserCtx<ParseModuleTypesCtx>,
       return in.err(pos, "tag type must be a signature");
     }
     t->type = use.type;
+    return Ok{};
+  }
+
+  Result<> addTypeImport(Name name,
+                         const std::vector<Name>& exports,
+                         ImportNames* import,
+                         Index pos) {
     return Ok{};
   }
 };
@@ -1757,11 +1781,23 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx> {
     return Ok{};
   }
 
+  Result<> addTypeImport(Name, const std::vector<Name>, ImportNames*, Index) {
+    return Ok{};
+  }
+
   Result<> addExport(Index pos, Name value, Name name, ExternalKind kind) {
     if (wasm.getExportOrNull(name)) {
       return in.err(pos, "duplicate export");
     }
     wasm.addExport(builder.makeExport(name, value, kind));
+    return Ok{};
+  }
+
+  Result<> addTypeExport(Index pos, HeapType heaptype, Name name) {
+    if (wasm.getExportOrNull(name)) {
+      return in.err(pos, "duplicate export");
+    }
+    wasm.addExport(builder.makeTypeExport(name, heaptype));
     return Ok{};
   }
 

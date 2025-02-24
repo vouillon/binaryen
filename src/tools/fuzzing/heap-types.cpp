@@ -146,6 +146,7 @@ struct HeapTypeGeneratorImpl {
           case wasm::HeapTypeKind::Cont:
             WASM_UNREACHABLE("TODO: cont");
           case wasm::HeapTypeKind::Basic:
+          case wasm::HeapTypeKind::Import:
             WASM_UNREACHABLE("unexpected kind");
         }
       }
@@ -542,9 +543,9 @@ struct HeapTypeGeneratorImpl {
       // from JS). There are also no subtypes to consider, so just return.
       return super;
     }
-    auto nullability = super.nullability == NonNullable
-                         ? NonNullable
-                         : rand.oneIn(2) ? Nullable : NonNullable;
+    auto nullability = super.nullability == NonNullable ? NonNullable
+                       : rand.oneIn(2)                  ? Nullable
+                                                        : NonNullable;
     return {pickSubHeapType(super.type), nullability};
   }
 
@@ -749,9 +750,8 @@ void Inhabitator::markNullable(FieldPos field) {
       // this extra `index` variable once we have C++20. It's a workaround for
       // lambdas being unable to capture structured bindings.
       const size_t index = idx;
-      subtypes.iterSubTypes(curr, [&](HeapType type, Index) {
-        nullables.insert({type, index});
-      });
+      subtypes.iterSubTypes(
+        curr, [&](HeapType type, Index) { nullables.insert({type, index}); });
       break;
   }
 }
@@ -942,6 +942,7 @@ std::vector<HeapType> Inhabitator::build() {
       }
       case HeapTypeKind::Cont:
         WASM_UNREACHABLE("TODO: cont");
+      case HeapTypeKind::Import:
       case HeapTypeKind::Basic:
         break;
     }
@@ -1034,6 +1035,7 @@ bool isUninhabitable(HeapType type,
       return false;
     case HeapTypeKind::Func:
     case HeapTypeKind::Cont:
+    case HeapTypeKind::Import:
       // Function types are always inhabitable.
       return false;
     case HeapTypeKind::Struct:
@@ -1063,6 +1065,7 @@ bool isUninhabitable(HeapType type,
     case HeapTypeKind::Basic:
     case HeapTypeKind::Func:
     case HeapTypeKind::Cont:
+    case HeapTypeKind::Import:
       WASM_UNREACHABLE("unexpected kind");
   }
   visiting.erase(it);

@@ -143,10 +143,12 @@ public:
 
   static std::unique_ptr<Export>
   makeExport(Name name, Name value, ExternalKind kind) {
-    auto export_ = std::make_unique<Export>();
-    export_->name = name;
-    export_->value = value;
-    export_->kind = kind;
+    auto export_ = std::make_unique<Export>(name, value, kind);
+    return export_;
+  }
+
+  static std::unique_ptr<Export> makeTypeExport(Name name, HeapType value) {
+    auto export_ = std::make_unique<Export>(name, value);
     return export_;
   }
 

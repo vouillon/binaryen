@@ -2235,6 +2235,7 @@ enum class ExternalKind {
   Memory = 2,
   Global = 3,
   Tag = 4,
+  Type = 5,
   Invalid = -1
 };
 
@@ -2258,8 +2259,15 @@ public:
   // exported name - note that this is the key, as the internal name is
   // non-unique (can have multiple exports for an internal, also over kinds)
   Name name;
-  Name value; // internal name
+  union {
+    Name value; // internal name
+    HeapType heaptype;
+  };
   ExternalKind kind;
+  Export(Name name, Name value, ExternalKind kind)
+    : name(name), value(value), kind(kind) {}
+  Export(Name name, HeapType heaptype)
+    : name(name), heaptype(heaptype), kind(ExternalKind::Type) {}
 };
 
 class ElementSegment : public Named {
