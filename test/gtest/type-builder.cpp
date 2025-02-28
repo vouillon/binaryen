@@ -165,8 +165,9 @@ TEST_F(TypeTest, Basics) {
   // (type $sig (func (param (ref $struct)) (result (ref $array) i32)))
   // (type $struct (struct (field (ref null $array))))
   // (type $array (array (mut anyref)))
-  TypeBuilder builder(3);
-  ASSERT_EQ(builder.size(), size_t{3});
+  // (type $import (import "a" "b" (sub any)))
+  TypeBuilder builder(4);
+  ASSERT_EQ(builder.size(), size_t{4});
 
   Type refStruct = builder.getTempRefType(builder[1], NonNullable);
   Type refArray = builder.getTempRefType(builder[2], NonNullable);
@@ -176,22 +177,25 @@ TEST_F(TypeTest, Basics) {
   Signature sig(refStruct, builder.getTempTupleType({refArray, Type::i32}));
   Struct struct_({Field(refNullArray, Immutable)});
   Array array(Field(refNullAny, Mutable));
+  TypeImport import("a", "b", HeapTypes::any);
 
   builder[0] = sig;
   builder[1] = struct_;
   builder[2] = array;
+  builder[3] = import;
 
-  builder.createRecGroup(0, 3);
+  builder.createRecGroup(0, 4);
 
   auto result = builder.build();
   ASSERT_TRUE(result);
   std::vector<HeapType> built = *result;
-  ASSERT_EQ(built.size(), size_t{3});
+  ASSERT_EQ(built.size(), size_t{4});
 
   // The built types should have the correct kinds.
   ASSERT_TRUE(built[0].isSignature());
   ASSERT_TRUE(built[1].isStruct());
   ASSERT_TRUE(built[2].isArray());
+  ASSERT_TRUE(built[3].isImport());
 
   // The built types should have the correct structure.
   Type newRefStruct = Type(built[1], NonNullable);
@@ -202,6 +206,7 @@ TEST_F(TypeTest, Basics) {
             Signature(newRefStruct, {newRefArray, Type::i32}));
   EXPECT_EQ(built[1].getStruct(), Struct({Field(newRefNullArray, Immutable)}));
   EXPECT_EQ(built[2].getArray(), Array(Field(refNullAny, Mutable)));
+  EXPECT_EQ(built[3].getImport(), import);
 }
 
 TEST_F(TypeTest, DirectSelfSupertype) {
@@ -497,13 +502,15 @@ TEST_F(TypeTest, HeapTypeConstructors) {
   HeapType sig(Signature(Type::i32, Type::i32));
   HeapType struct_(Struct({Field(Type(sig, Nullable), Mutable)}));
   HeapType array(Field(Type(struct_, Nullable), Mutable));
+  HeapType import(Import("a", "b", HeapTypes::any));
 
-  TypeBuilder builder(3);
+  TypeBuilder builder(4);
   builder[0] = Signature(Type::i32, Type::i32);
   Type sigRef = builder.getTempRefType(builder[0], Nullable);
   builder[1] = Struct({Field(sigRef, Mutable)});
   Type structRef = builder.getTempRefType(builder[1], Nullable);
   builder[2] = Array(Field(structRef, Mutable));
+  builder[3] = import;
 
   auto result = builder.build();
   ASSERT_TRUE(result);
@@ -512,14 +519,17 @@ TEST_F(TypeTest, HeapTypeConstructors) {
   EXPECT_EQ(built[0], sig);
   EXPECT_EQ(built[1], struct_);
   EXPECT_EQ(built[2], array);
+  EXPECT_EQ(built[3], import);
 
   HeapType sig2(Signature(Type::i32, Type::i32));
   HeapType struct2(Struct({Field(Type(sig, Nullable), Mutable)}));
   HeapType array2(Field(Type(struct_, Nullable), Mutable));
+  HeapType import2(Import("a", "b", HeapTypes::any));
 
   EXPECT_EQ(sig, sig2);
   EXPECT_EQ(struct_, struct2);
   EXPECT_EQ(array, array2);
+  EXPECT_EQ(import, import2);
 }
 
 TEST_F(TypeTest, CanonicalizeTypesBeforeSubtyping) {
