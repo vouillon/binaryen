@@ -2241,7 +2241,7 @@ struct OptimizeInstructions
     // bound of the original cast type and the type we know the cast value to
     // have. We know any less specific type either cannot appear or will fail
     // the cast anyways.
-    auto glb = Type::getGreatestLowerBound(curr->type, refType);
+    auto glb = Type::refineType(curr->type, refType);
     if (glb != Type::unreachable && glb != curr->type) {
       curr->type = glb;
       refinalize = true;
@@ -2409,7 +2409,7 @@ struct OptimizeInstructions
       Properties::getFallthroughType(curr->ref, getPassOptions(), *getModule());
 
     // Improve the cast type as much as we can without changing the results.
-    auto glb = Type::getGreatestLowerBound(curr->castType, refType);
+    auto glb = Type::refineType(curr->castType, refType);
     if (glb != Type::unreachable && glb != curr->castType) {
       curr->castType = glb;
     }

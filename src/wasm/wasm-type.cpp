@@ -842,6 +842,46 @@ Type Type::getGreatestLowerBound(Type a, Type b) {
   return Type(heapType, nullability);
 }
 
+Type Type::refineType(Type a, Type b) {
+  if (a == b) {
+    return a;
+  }
+  if (a.isTuple() && b.isTuple() && a.size() == b.size()) {
+    std::vector<Type> elems;
+    size_t size = a.size();
+    elems.reserve(size);
+    for (size_t i = 0; i < size; ++i) {
+      auto glb = Type::refineType(a[i], b[i]);
+      if (glb == Type::unreachable) {
+        return Type::unreachable;
+      }
+      elems.push_back(glb);
+    }
+    return Tuple(elems);
+  }
+  if (!a.isRef() || !b.isRef()) {
+    return Type::unreachable;
+  }
+  auto heapA = a.getHeapType();
+  auto heapB = b.getHeapType();
+  if (heapA.getBottom() != heapB.getBottom()) {
+    return Type::unreachable;
+  }
+  auto nullability =
+    (a.isNonNullable() || b.isNonNullable()) ? NonNullable : Nullable;
+  HeapType heapType;
+  if (HeapType::isSubType(heapA, heapB)) {
+    heapType = heapA;
+  } else if (HeapType::isSubType(heapB, heapA)) {
+    heapType = heapB;
+  } else if (heapA.isImport() || heapB.isImport()){
+    heapType = heapA;
+  } else {
+    heapType = heapA.getBottom();
+  }
+  return Type(heapType, nullability);
+}
+
 const Type& Type::Iterator::operator*() const {
   if (parent->isTuple()) {
     return parent->getTuple()[index];
@@ -874,6 +914,11 @@ HeapType::HeapType(Struct&& struct_) {
 HeapType::HeapType(Array array) {
   new (this)
     HeapType(globalRecGroupStore.insert(std::make_unique<HeapTypeInfo>(array)));
+}
+
+HeapType::HeapType(TypeImport import) {
+  new (this)
+    HeapType(globalRecGroupStore.insert(std::make_unique<HeapTypeInfo>(import)));
 }
 
 HeapTypeKind HeapType::getKind() const {

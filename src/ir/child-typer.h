@@ -865,6 +865,7 @@ template<typename Subtype> struct ChildTyper : OverriddenVisitor<Subtype> {
         return;
       case BrOnCast:
       case BrOnCastFail: {
+        // TODO: update
         auto top = curr->castType.getHeapType().getTop();
         note(&curr->ref, Type(top, Nullable));
         return;

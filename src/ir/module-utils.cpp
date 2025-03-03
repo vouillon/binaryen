@@ -436,7 +436,7 @@ struct CodeScanner
       info.note(cast->castType);
     } else if (auto* cast = curr->dynCast<BrOn>()) {
       if (cast->op == BrOnCast || cast->op == BrOnCastFail) {
-        info.note(cast->ref->type);
+        info.note(Type::getLeastUpperBound(cast->ref->type, cast->castType));
         info.note(cast->castType);
       }
     } else if (auto* get = curr->dynCast<StructGet>()) {

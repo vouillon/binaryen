@@ -905,7 +905,7 @@ struct RemoveUnusedBrs : public WalkerPass<PostWalker<RemoveUnusedBrs>> {
         // information from all the fallthrough values here. We can continue to
         // further optimizations after this, and those optimizations might even
         // benefit from this improvement.
-        auto glb = Type::getGreatestLowerBound(curr->castType, refType);
+        auto glb = Type::refineType(curr->castType, refType);
         if (glb != Type::unreachable && glb != curr->castType) {
           curr->castType = glb;
           auto oldType = curr->type;

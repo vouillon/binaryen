@@ -2285,7 +2285,7 @@ struct PrintExpressionContents
           // option.
           printType(curr->castType);
         } else {
-          printType(curr->ref->type);
+          printType(Type::getLeastUpperBound(curr->castType, curr->ref->type));
         }
         o << ' ';
         printType(curr->castType);
@@ -2297,7 +2297,7 @@ struct PrintExpressionContents
         if (curr->ref->type == Type::unreachable) {
           printType(curr->castType);
         } else {
-          printType(curr->ref->type);
+          printType(Type::getLeastUpperBound(curr->castType, curr->ref->type));
         }
         o << ' ';
         printType(curr->castType);

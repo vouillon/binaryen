@@ -380,7 +380,7 @@ inline Type getFallthroughType(Expression* curr,
     if (next == curr) {
       return type;
     }
-    type = Type::getGreatestLowerBound(type, next->type);
+    type = Type::refineType(type, next->type);
     if (type == Type::unreachable) {
       return type;
     }

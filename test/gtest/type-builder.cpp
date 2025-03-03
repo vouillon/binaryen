@@ -502,7 +502,7 @@ TEST_F(TypeTest, HeapTypeConstructors) {
   HeapType sig(Signature(Type::i32, Type::i32));
   HeapType struct_(Struct({Field(Type(sig, Nullable), Mutable)}));
   HeapType array(Field(Type(struct_, Nullable), Mutable));
-  HeapType import(Import("a", "b", HeapTypes::any));
+  HeapType import(TypeImport("a", "b", HeapTypes::any));
 
   TypeBuilder builder(4);
   builder[0] = Signature(Type::i32, Type::i32);
@@ -524,7 +524,7 @@ TEST_F(TypeTest, HeapTypeConstructors) {
   HeapType sig2(Signature(Type::i32, Type::i32));
   HeapType struct2(Struct({Field(Type(sig, Nullable), Mutable)}));
   HeapType array2(Field(Type(struct_, Nullable), Mutable));
-  HeapType import2(Import("a", "b", HeapTypes::any));
+  HeapType import2(TypeImport("a", "b", HeapTypes::any));
 
   EXPECT_EQ(sig, sig2);
   EXPECT_EQ(struct_, struct2);

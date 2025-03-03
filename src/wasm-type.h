@@ -148,6 +148,7 @@ public:
   HeapType(const Struct& struct_);
   HeapType(Struct&& struct_);
   HeapType(Array array);
+  HeapType(TypeImport import);
 
   HeapTypeKind getKind() const;
 
@@ -482,6 +483,12 @@ public:
   }
 
   static Type getGreatestLowerBound(Type a, Type b);
+
+  // Refine the type `output` while still encompassing all values of
+  // type `input`. Formally, return the most precise upper bound of
+  // the intersection of types `output` and `input` (which does not
+  // always exist with type imports) which is a subtype of `output`.
+  static Type refineType(Type output, Type input);
 
   // Helper allowing the value of `print(...)` to be sent to an ostream. Stores
   // a `TypeID` because `Type` is incomplete at this point and using a reference

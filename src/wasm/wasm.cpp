@@ -1032,7 +1032,7 @@ void RefTest::finalize() {
   } else {
     type = Type::i32;
     // Do not unnecessarily lose type information.
-    castType = Type::getGreatestLowerBound(castType, ref->type);
+    castType = Type::refineType(castType, ref->type);
   }
 }
 
@@ -1053,7 +1053,7 @@ void RefCast::finalize() {
   // OptimizeInstructions), but doing it here as part of
   // finalization/refinalization ensures that type information flows through in
   // an optimal manner and can be used as soon as possible.
-  type = Type::getGreatestLowerBound(type, ref->type);
+  type = Type::refineType(type, ref->type);
 }
 
 void BrOn::finalize() {
@@ -1062,10 +1062,11 @@ void BrOn::finalize() {
     return;
   }
   if (op == BrOnCast || op == BrOnCastFail) {
+    // TODO: rephrase
     // The cast type must be a subtype of the input type. If we've refined the
     // input type so that this is no longer true, we can fix it by similarly
     // refining the cast type in a way that will not change the cast behavior.
-    castType = Type::getGreatestLowerBound(castType, ref->type);
+    castType = Type::refineType(castType, ref->type);
     assert(castType.isRef());
   }
   switch (op) {
